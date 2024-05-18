@@ -1,0 +1,79 @@
+server:
+  port: 8081
+spring:
+  datasource:
+    url: jdbc:h2:mem:order_db
+    username: sa
+    password: password
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  application:
+    name: ORDER-SERVICE
+  config:
+    import: optional:configserver:http://localhost:9296
+  #  security:
+  #    oauth2:
+  #      resourceserver:
+  #        jwt:
+  #          issuer-uri: https://dev-43724657.okta.com/oauth2/default
+  #      client:
+  #        registration:
+  #          internal-client:
+  #            provider: okta
+  #            authorization-grant-type: client_credentials
+  #            scope: internal
+  #            client-id: 0oaf1kz9cpI7vpqtl5d7
+  #            client-secret: KnWDwRBAzV-OQRRV0072XwNEfaotr_07Evpbs28yK3ul6vdD4Az9__xwd8d9VBxA
+  security:
+    oauth2:
+      client:
+        registration:
+          #          internal-client:
+          #            provider: okta
+          okta:
+            client-id: 0oaf1kz9cpI7vpqtl5d7
+            client-secret: KnWDwRBAzV-OQRRV0072XwNEfaotr_07Evpbs28yK3ul6vdD4Az9__xwd8d9VBxA
+            scope: internal
+        #            redirect-uri: http://localhost:8765/login/oauth2/code/okta
+
+
+        provider:
+          okta:
+            issuer-uri: https://dev-43724657.okta.com/oauth2/default
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-43724657.okta.com/oauth2/default
+    liquibase:
+      change-log: classpath:db/changelog/db.changelog-master.yaml
+
+#resilience4j:
+#      circuitbreaker:
+#        instances:
+#          external:
+#            event-consumer-buffer-size: 10
+#            failure-rate-threshold: 50
+#            minimum-number-of-calls: 5
+#            automatic-transition-from-open-to-half-open-enabled: true
+#            wait-duration-in-open-state: 5s
+#            permitted-number-of-calls-in-half-open-state: 3
+#            sliding-window-size: 10
+#            sliding-window-type: COUNT_BASED
+
+
+logging:
+  level:
+    org:
+      springframework: info
+
+#      springframework: DEBUG
+
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    fetch-registry: true
+#    register-with-eureka: true
+#    service-url:
+#      defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka}
+#

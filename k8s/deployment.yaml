@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  selector:
+    matchLabels:
+      app: order-service
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: borissolomonia/dailycodebuffer:order-service-05
+          ports:
+            - containerPort: 8081
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-cm
+                  key: eureka_service_address
+            - name: CONFIG_SERVER_URL
+              value: "http://config-server-svc:9296/"
+            #              valueFrom:
+#                configMapKeyRef:
+#                  name: config-cm
+#                  key: spring_config_import
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-order-cm
+                  key: hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service-svc
+spec:
+    selector:
+        app: order-service
+    ports:
+        - port: 80
+          targetPort: 8081
