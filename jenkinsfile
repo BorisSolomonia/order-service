@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    environment {
+        REGISTRY_URL = 'asia-south1-docker.pkg.dev'
+        // PROJECT_ID = 'your-project-id'
+        // ARTIFACT_REGISTRY = 'your-artifact-registry'
+        // CLUSTER = 'your-cluster-name'
+        // ZONE = 'your-cluster-zone'
+        GITHUB_TOKEN = credentials('github-access-token')
+        KUBECONFIG = credentials('kubeconfig')  // Reference the kubeconfig credential
+        GC_KEY = credentials('GCP')
+        REPO_URL = "${REGISTRY_URL}/${PROJECT_ID}/${ARTIFACT_REGISTRY}"
+        // mvnHome = tool name: 'maven', type: maven
+        // mvvCMD = "${mvnHome}/bin/mvn"
+    }
+    tools {
+        maven 'maven'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out the code...'
+                echo "Using GitHub Token: ${GITHUB_TOKEN}"
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[credentialsId: 'github-access-token', url: 'https://github.com/BorisSolomonia/order-service.git']]
+                ])
+            }
+        }
+        stage('Build and Push Stage') {
+            steps {
+                echo 'Building and pushing the Docker image...'
+                echo "Using GCP Key: ${GC_KEY}"
+                withCredentials([file(credentialsId: 'GCP', variable: 'GC_KEY')]) {
+                    sh 'gcloud auth activate-service-account --key-file=$GC_KEY'
+                    sh 'gcloud auth configure-docker asia-south1-docker.pkg.dev'
+                    sh 'mvn clean install jib:build -DREPO_URL=${REGISTRY_URL}/${PROJECT_ID}/${ARTIFACT_REGISTRY}'
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying to Kubernetes...'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh 'kubectl apply -f k8s/deployment.yaml --kubeconfig $KUBECONFIG'
+                }
+            }
+        }
+    }
+}
