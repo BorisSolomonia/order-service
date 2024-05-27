@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: IMAGE_URL/dailycodebuffer:order-service-05
+          image: borissolomonia/dailycodebuffer:order-service-05
           ports:
             - containerPort: 8081
           env:
